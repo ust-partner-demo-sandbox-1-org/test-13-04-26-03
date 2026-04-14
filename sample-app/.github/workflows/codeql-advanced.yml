@@ -1,0 +1,52 @@
+name: "CodeQL Advanced"
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+  schedule:
+    - cron: '0 0 * * 0'
+
+jobs:
+  analyze:
+    name: Analyze (java-kotlin)
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    permissions:
+      security-events: write
+      packages: read
+      actions: read
+      contents: read
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up JDK 21
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: 21
+
+    # KEY FIX: Create .env file with credentials BEFORE CodeQL autobuild
+    - name: Create .env file with credentials
+      run: |
+        touch .env
+        echo GPR_USERNAME=${{ secrets.GPR_USERNAME }} >> .env
+        echo GPR_PASSWORD=${{ secrets.GPR_PASSWORD }} >> .env
+
+    - name: Initialize CodeQL
+      uses: github/codeql-action/init@v3
+      with:
+        languages: java-kotlin
+        queries: +security-and-quality
+
+    # Autobuild will now have access to credentials via .env file
+    - name: Autobuild
+      uses: github/codeql-action/autobuild@v3
+
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@v3
+      with:
+        category: "/language:java-kotlin"
