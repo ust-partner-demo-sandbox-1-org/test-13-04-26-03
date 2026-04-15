@@ -1,6 +1,6 @@
-### CodeQL Test Project TESTING..
+### CodeQL Test Project TESTING.....
 
-Test environment to reproduce and solve CodeQL private maven registry authentication issues.
+Test environment to reproduce and solve CodeQL private maven registry authentication issues..
 
 ## 🎯 Purpose
 Replicate staircase-backend's CodeQL failure where private GitHub Packages require credentials that default CodeQL setup cannot access.
