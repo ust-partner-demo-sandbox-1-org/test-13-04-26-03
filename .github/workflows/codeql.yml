@@ -84,7 +84,8 @@ jobs:
     - name: Create .env file
       if: matrix.language == 'java-kotlin'
       run: touch .env
-
+    - name: Make gradlew executable
+      run: chmod +x gradlew
     - name: Pre-download all dependencies
       if: matrix.language == 'java-kotlin'
       run: ./gradlew dependencies --no-daemon
