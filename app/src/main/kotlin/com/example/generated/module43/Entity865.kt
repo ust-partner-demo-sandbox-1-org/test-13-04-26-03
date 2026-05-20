@@ -3,6 +3,7 @@ package com.example.generated.module43
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import jakarta.persistence.*
+import org.springframework.web.bind.annotation.*
 
 @Entity
 @Table(name = "entity_865")
@@ -14,12 +15,20 @@ data class Entity865(
     val field3: Int = 0,
     val field4: Boolean = false,
     @Column(columnDefinition = "TEXT")
-    val field5: String? = null
+    val field5: String? = null,
+    val field6: Double = 0.0,
+    val field7: String? = null,
+    val field8: Long = 0,
+    val field9: Boolean = true,
+    @Column(columnDefinition = "TEXT")
+    val field10: String? = null
 )
 
 interface Entity865Repository : org.springframework.data.jpa.repository.JpaRepository<Entity865, Long> {
     fun findByField1(field1: String): List<Entity865>
     fun findByField3GreaterThan(value: Int): List<Entity865>
+    fun findByField4(active: Boolean): List<Entity865>
+    fun findByField1ContainingIgnoreCase(search: String): List<Entity865>
 }
 
 @Service
@@ -27,6 +36,8 @@ interface Entity865Repository : org.springframework.data.jpa.repository.JpaRepos
 class Service865(private val repo: Entity865Repository) {
     fun findAll(): List<Entity865> = repo.findAll()
     fun findByName(name: String): List<Entity865> = repo.findByField1(name)
+    fun findActive(): List<Entity865> = repo.findByField4(true)
+    fun search(query: String): List<Entity865> = repo.findByField1ContainingIgnoreCase(query)
     fun save(entity: Entity865): Entity865 = repo.save(entity)
     fun delete(id: Long) = repo.deleteById(id)
     fun process(items: List<Entity865>): List<Entity865> {
@@ -34,4 +45,26 @@ class Service865(private val repo: Entity865Repository) {
             .map { it.copy(field2 = it.field1.uppercase(), field3 = it.field3 + 1) }
             .sortedBy { it.field3 }
     }
+    fun transform(items: List<Entity865>): Map<String, List<Entity865>> {
+        return items.groupBy { it.field1 }
+            .mapValues { (_, v) -> v.sortedByDescending { it.field8 } }
+    }
+    fun validate(entity: Entity865): Boolean {
+        return entity.field1.isNotBlank() && entity.field3 >= 0 && entity.field6 > 0.0
+    }
+}
+
+@RestController
+@RequestMapping("/api/v1/entity865")
+class Controller865(private val service: Service865) {
+    @GetMapping
+    fun getAll() = service.findAll()
+    @GetMapping("/search")
+    fun search(@RequestParam q: String) = service.search(q)
+    @GetMapping("/active")
+    fun getActive() = service.findActive()
+    @PostMapping
+    fun create(@RequestBody entity: Entity865) = service.save(entity)
+    @DeleteMapping("/{id}")
+    fun delete(@PathVariable id: Long) = service.delete(id)
 }
