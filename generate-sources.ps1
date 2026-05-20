@@ -1,6 +1,6 @@
 $baseDir = "app\src\main\kotlin\com\example\generated"
 
-for ($i = 1; $i -le 300; $i++) {
+for ($i = 1; $i -le 1000; $i++) {
     $dir = "$baseDir\module$([math]::Floor($i/20))"
     New-Item -ItemType Directory -Force -Path $dir | Out-Null
     
