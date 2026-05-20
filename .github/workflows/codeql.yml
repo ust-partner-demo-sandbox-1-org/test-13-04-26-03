@@ -62,7 +62,7 @@ jobs:
 
       - name: Build for CodeQL
         if: matrix.build-mode == 'manual'
-        run: ./gradlew assemble --no-daemon --warning-mode summary -x test -Dkotlin.incremental=false
+        run: ./gradlew assemble --no-daemon --warning-mode summary -x test -Dkotlin.incremental=false  -Pkotlin.compiler.execution.strategy=in-process
         env:
           GRADLE_OPTS: "-Xmx4g"
 
