@@ -64,7 +64,7 @@ jobs:
         if: matrix.build-mode == 'manual'
         run: ./gradlew assemble --no-daemon --warning-mode summary -x test -Dkotlin.incremental=false
         env:
-          GRADLE_OPTS: "-Xmx4g -Dkotlin.compiler.execution.strategy=in-process"
+          GRADLE_OPTS: "-Xmx4g"
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v4
