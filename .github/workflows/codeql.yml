@@ -65,12 +65,61 @@ jobs:
     # - name: Setup runtime (example)
     #   uses: actions/setup-example@v1
 
-    # Initializes the CodeQL tools for scanning.
+    - name: Set up JDK 21
+      if: matrix.language == 'java-kotlin'
+      uses: actions/setup-java@v5.2.0
+      with:
+        distribution: 'temurin'
+        java-version: 21
+
+    - name: Set up Gradle
+      if: matrix.language == 'java-kotlin'
+      uses: gradle/actions/setup-gradle@v6.1.0
+      with:
+        gradle-home-cache-includes: |
+          caches
+          notifications
+          wrapper
+
+    - name: Create .env file
+      if: matrix.language == 'java-kotlin'
+      run: touch .env
+
+    - name: Pre-download all dependencies
+      if: matrix.language == 'java-kotlin'
+      run: ./gradlew dependencies --no-daemon
+
     - name: Initialize CodeQL
-      uses: github/codeql-action/init@v4iii
+      uses: github/codeql-action/init@v4
       with:
         languages: ${{ matrix.language }}
         build-mode: ${{ matrix.build-mode }}
+        queries: security-extended
+
+    - name: Build for CodeQL
+      if: matrix.build-mode == 'manual'
+      timeout-minutes: 30
+      run: |
+        ./gradlew assemble \
+          --no-daemon \
+          --offline \
+          --no-build-cache \
+          --max-workers=2 \
+          --info \
+          -x test \
+          -x ktlintCheck \
+          -Pkotlin.compiler.execution.strategy=in-process
+      env:
+        JOOQ_LOG_LEVEL: INFO
+        # Single JVM for both Gradle and Kotlin compiler — no separate daemon
+        GRADLE_OPTS: "-Xmx6g"
+
+    # # Initializes the CodeQL tools for scanning.
+    # - name: Initialize CodeQL
+    #   uses: github/codeql-action/init@v4
+    #   with:
+    #     languages: ${{ matrix.language }}
+    #     build-mode: ${{ matrix.build-mode }}
         # If you wish to specify custom queries, you can do so here or in a config file.
         # By default, queries listed here will override any specified in a config file.
         # Prefix the list here with "+" to use these queries and those in the config file.
@@ -86,25 +135,26 @@ jobs:
     # 📚 See https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idstepsrun
   
 
-    - name: Run manual build steps
-      if: matrix.build-mode == 'manual'
-      shell: bash
-      working-directory: .
-      env:
-        GPR_USERNAME: ${{ secrets.GPR_USERNAME }}
-        GPR_PASSWORD: ${{ secrets.GPR_PASSWORD }}
-      run: |
-        # Build sample-library
-        echo "Building sample-library..."
-        cd sample-library
-        chmod +x ./gradlew
-        ./gradlew clean build -x test
-        cd ..
+    # - name: Run manual build steps
+    #   if: matrix.build-mode == 'manual'
+    #   shell: bash
+    #   working-directory: .
+    #   env:
+    #     GPR_USERNAME: ${{ secrets.GPR_USERNAME }}
+    #     GPR_PASSWORD: ${{ secrets.GPR_PASSWORD }}
+    #   run: |
+        # # Build sample-library
+        # echo "Building sample-library..."
+        # cd sample-library
+        # chmod +x ./gradlew
+        # ./gradlew clean build -x test
+        # cd ..
 
-        # Build sample-app
-        echo "Building sample-app..."
-        cd sample-app || exit 1
-        ./gradlew clean build --no-daemon -x test
+        # # Build sample-app
+        # echo "Building sample-app..."
+        # cd sample-app || exit 1
+        # ./gradlew clean build --no-daemon -x test
+
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v4
       with:
